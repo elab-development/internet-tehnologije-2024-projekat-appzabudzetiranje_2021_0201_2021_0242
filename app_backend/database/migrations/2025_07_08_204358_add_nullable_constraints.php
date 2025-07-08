@@ -13,7 +13,6 @@ class AddNullableConstraints extends Migration
             $table->string('image')->nullable()->change();
             $table->string('phone')->nullable()->change();
             $table->text('bio')->nullable()->change();
-            $table->json('settings')->nullable()->change();
             $table->timestamp('email_verified_at')->nullable()->change();
         });
 
@@ -54,7 +53,6 @@ class AddNullableConstraints extends Migration
             $table->string('image')->nullable(false)->change();
             $table->string('phone')->nullable(false)->change();
             $table->text('bio')->nullable(false)->change();
-            $table->json('settings')->nullable(false)->change();
             $table->timestamp('email_verified_at')->nullable(false)->change();
         });
     }

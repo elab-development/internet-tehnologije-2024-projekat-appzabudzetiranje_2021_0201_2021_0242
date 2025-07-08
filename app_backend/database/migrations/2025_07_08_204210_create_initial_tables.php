@@ -17,12 +17,13 @@ class CreateInitialTables extends Migration
             $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('image');
-            $table->string('role');
-            $table->string('phone');
-            $table->text('bio');
-            $table->json('settings');
-            $table->string('status');
+            $table->string('image')->nullable();
+            // enum za uloge
+            $table->enum('role', ['regular', 'administrator'])->default('regular');
+            $table->string('phone')->nullable();
+            $table->text('bio')->nullable();
+            // enum za status
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -32,7 +33,7 @@ class CreateInitialTables extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('owner_id');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->string('slug');
             $table->string('privacy');
             $table->timestamps();
@@ -44,7 +45,7 @@ class CreateInitialTables extends Migration
             $table->unsignedBigInteger('user_id');
             $table->integer('year');
             $table->integer('month');
-            $table->text('notes');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
 
@@ -56,12 +57,21 @@ class CreateInitialTables extends Migration
             $table->string('currency', 3);
             $table->text('description');
             $table->date('date');
-            $table->string('category');
-            $table->string('payment_method');
-            $table->string('receipt_image');
-            $table->boolean('is_recurring');
-            $table->string('recurring_interval');
-            $table->json('tags');
+            // enum za kategoriju troška (samo na engleskom)
+            $table->enum('category', [
+                'shopping',
+                'food',
+                'medicines',
+                'sports_and_recreation',
+                'entertainment',
+                'bills',
+            ]);
+            // enum za način plaćanja
+            $table->enum('payment_method', ['cash', 'card']);
+            $table->string('receipt_image')->nullable();
+            $table->boolean('is_recurring')->default(false);
+            $table->string('recurring_interval')->nullable();
+            $table->json('tags')->nullable();
             $table->timestamps();
         });
 
