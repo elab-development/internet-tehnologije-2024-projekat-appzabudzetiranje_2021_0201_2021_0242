@@ -24,18 +24,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 
     // Users (only regular & admin can list; only regular can CRUD)
-    Route::get   ('users',          [UserController::class, 'index']);
-    Route::post  ('users',          [UserController::class, 'store']);
-    Route::get   ('users/{id}',     [UserController::class, 'show']);
-    Route::put   ('users/{id}',     [UserController::class, 'update']);
-    Route::delete('users/{id}',     [UserController::class, 'destroy']);
+    Route::apiResource('users', UserController::class);
 
     // Groups (only regular)
-    Route::get   ('groups',         [GroupController::class, 'index']);
-    Route::post  ('groups',         [GroupController::class, 'store']);
-    Route::get   ('groups/{id}',    [GroupController::class, 'show']);
-    Route::put   ('groups/{id}',    [GroupController::class, 'update']);
-    Route::delete('groups/{id}',    [GroupController::class, 'destroy']);
+    Route::apiResource('groups', GroupController::class);
 
     // Savings Reports (only regular)
     Route::get   ('savings-reports',            [SavingsReportController::class, 'index']);
