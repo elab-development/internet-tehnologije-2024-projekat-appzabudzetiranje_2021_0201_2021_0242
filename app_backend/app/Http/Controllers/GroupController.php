@@ -142,4 +142,33 @@ class GroupController extends Controller
 
         return response()->json(['message' => 'Group deleted successfully.'], 200);
     }
+
+    /**
+     * Join a group by ID.
+     * Accessible only by regular users.
+     */
+    public function join($id)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+        if ($user->role !== 'regular') {
+            return response()->json(['error' => 'You do not have permission.'], 403);
+        }
+
+        $group = Group::with('users')->find($id);
+        if (! $group) {
+            return response()->json(['error' => 'Group not found.'], 404);
+        }
+
+        // attach without duplicating
+        $group->users()->syncWithoutDetaching([$user->id]);
+
+        // reload members
+        $group->load('users');
+
+        return new GroupResource($group);
+    }
+
 }

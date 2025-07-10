@@ -28,14 +28,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Groups (only regular)
     Route::apiResource('groups', GroupController::class);
+    Route::post('groups/{id}/join', [GroupController::class, 'join']);
 
-    // Savings Reports (only regular)
+    // Savings Reports (only regular) 
+    Route::get   ('savings-reports/statistics', [SavingsReportController::class, 'statistics']);
     Route::get   ('savings-reports',            [SavingsReportController::class, 'index']);
     Route::post  ('savings-reports',            [SavingsReportController::class, 'store']);
     Route::get   ('savings-reports/{id}',       [SavingsReportController::class, 'show']);
-    Route::put   ('savings-reports/{id}',       [SavingsReportController::class, 'update']);
+    Route::patch   ('savings-reports/{id}',       [SavingsReportController::class, 'update']);
     Route::delete('savings-reports/{id}',       [SavingsReportController::class, 'destroy']);
-    Route::get   ('savings-reports/statistics', [SavingsReportController::class, 'statistics']);
 
     // Expenses (only regular)
     Route::get   ('expenses',         [ExpenseController::class, 'index']);
