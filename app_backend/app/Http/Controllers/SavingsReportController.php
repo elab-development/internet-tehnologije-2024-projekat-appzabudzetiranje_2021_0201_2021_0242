@@ -106,17 +106,7 @@ class SavingsReportController extends Controller
         }
 
         $data = $request->validate([
-            'year'  => 'sometimes|required|integer|min:2000|max:2100',
-            'month' => [
-                'sometimes',
-                'required',
-                'integer',
-                'between:1,12',
-                Rule::unique('savings_reports')
-                    ->where('user_id', $user->id)
-                    ->ignore($report->id)
-            ],
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
         $report->update($data);
