@@ -70,15 +70,10 @@ class AuthController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Ensure account is active
-        if ($user->status !== 'active') {
-            return response()->json([
-                'message' => 'Account is not active.'
-            ], 403);
-        }
-
         // Issue new token
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->status = 'active';
+        $user->save();
 
         return response()->json([
             'message' => 'Login successful.',
@@ -103,7 +98,14 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // Revoke current token
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        // Mark the user as inactive
+        $user->status = 'inactive';
+        $user->save();
+
+        // Revoke current token
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully.',
