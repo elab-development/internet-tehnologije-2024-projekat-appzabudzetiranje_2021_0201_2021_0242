@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Auth from './pages/Auth'
 import Home from './pages/Home'
 import NavigationMenu from './components/NavigationMenu'
+import Footer from './components/Footer'
 
 function App() {
   // local state for the token
@@ -42,6 +43,7 @@ function App() {
           element={token ? <Home /> : <Navigate to="/" />}
         />
       </Routes>
+      {token && <Footer/>}
     </BrowserRouter>
   )
 }

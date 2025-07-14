@@ -11,6 +11,7 @@ import {
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import { useNavigate } from 'react-router-dom'
 
 const features = [
   {
@@ -34,6 +35,7 @@ const features = [
 ]
 
 export default function Home() {
+  const navigate   = useNavigate()
   const raw = sessionStorage.getItem('user')
   const user = raw ? JSON.parse(raw) : {}
   const name = user.name || 'User'
@@ -95,6 +97,7 @@ export default function Home() {
                   background: 'linear-gradient(90deg, #1565C0, #00B0FF)',
                 },
               }}
+              onClick={() => navigate('/expenses')}
             >
               Start tracking
             </Button>
