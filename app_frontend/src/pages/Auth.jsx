@@ -64,7 +64,13 @@ const Auth = () => {
     data.append('image', file)
     const res = await axios.post(
       `https://api.imgbb.com/1/upload?key=${key}`,
-      data
+      data,
+      {
+        headers: {
+          // force a “simple” content‐type so CORS won’t preflight
+          'Content-Type': 'multipart/form-data'
+        }
+      }
     )
     return res.data.data.url
   }
@@ -100,7 +106,7 @@ const Auth = () => {
       sessionStorage.setItem('token', data.token)
       sessionStorage.setItem('user', JSON.stringify(data.user))
 
-      navigate('/')
+      navigate('/home')
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong')
     } finally {
@@ -168,6 +174,9 @@ const Auth = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: 'rgba(255,255,255,0.04)',
+                    '& .MuiOutlinedInput-input': {
+                      color: '#FFF'
+                    }
                   }
                 }}
                 onChange={handleChange}
@@ -182,6 +191,9 @@ const Auth = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: 'rgba(255,255,255,0.04)',
+                    '& .MuiOutlinedInput-input': {
+                      color: '#FFF'
+                    }
                   }
                 }}
                 onChange={handleChange}
@@ -200,6 +212,9 @@ const Auth = () => {
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 backgroundColor: 'rgba(255,255,255,0.04)',
+                '& .MuiOutlinedInput-input': {
+                  color: '#FFF'
+                }
               }
             }}
             onChange={handleChange}
@@ -216,6 +231,9 @@ const Auth = () => {
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 backgroundColor: 'rgba(255,255,255,0.04)',
+                '& .MuiOutlinedInput-input': {
+                  color: '#FFF'
+                }
               }
             }}
             onChange={handleChange}
@@ -233,6 +251,9 @@ const Auth = () => {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   backgroundColor: 'rgba(255,255,255,0.04)',
+                  '& .MuiOutlinedInput-input': {
+                    color: '#FFF'
+                  }
                 }
               }}
               onChange={handleChange}
@@ -252,6 +273,9 @@ const Auth = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: 'rgba(255,255,255,0.04)',
+                    '& .MuiOutlinedInput-input': {
+                      color: '#FFF'
+                    }
                   }
                 }}
                 onChange={handleChange}
@@ -267,6 +291,9 @@ const Auth = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: 'rgba(255,255,255,0.04)',
+                    '& .MuiOutlinedInput-input': {
+                      color: '#FFF'
+                    }
                   }
                 }}
                 onChange={handleChange}
