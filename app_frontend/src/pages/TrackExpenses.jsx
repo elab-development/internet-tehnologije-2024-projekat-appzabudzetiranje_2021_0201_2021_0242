@@ -1,4 +1,5 @@
 // src/pages/TrackExpenses.jsx
+
 import React, { useState } from 'react'
 import {
   Box,
@@ -6,7 +7,6 @@ import {
   Stack,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   CardActions,
@@ -24,6 +24,14 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import EditIcon       from '@mui/icons-material/Edit'
 import DeleteIcon     from '@mui/icons-material/Delete'
 
+// Category icons
+import ShoppingCartIcon   from '@mui/icons-material/ShoppingCart'
+import FastfoodIcon       from '@mui/icons-material/Fastfood'
+import LocalPharmacyIcon  from '@mui/icons-material/LocalPharmacy'
+import SportsSoccerIcon   from '@mui/icons-material/SportsSoccer'
+import MovieIcon          from '@mui/icons-material/Movie'
+import ReceiptLongIcon    from '@mui/icons-material/ReceiptLong'
+
 import useGetExpenses        from '../hooks/useGetExpenses'
 import useGetSavingsReports  from '../hooks/useGetSavingsReports'
 import useCreateExpense      from '../hooks/useCreateExpense'
@@ -34,8 +42,17 @@ import useUpdateExpenseMonth from '../hooks/useUpdateExpenseMonth'
 const categories     = ['shopping','food','medications','sports','entertainment','bills']
 const paymentMethods = ['cash','card']
 
+// map each category to its icon component
+const categoryIcons = {
+  shopping:      ShoppingCartIcon,
+  food:          FastfoodIcon,
+  medications:   LocalPharmacyIcon,
+  sports:        SportsSoccerIcon,
+  entertainment: MovieIcon,
+  bills:         ReceiptLongIcon
+}
+
 export default function TrackExpenses() {
-  // fetch data & actions
   const { expenses, loading, refetch }           = useGetExpenses()
   const { reports, loading: reportsLoading }     = useGetSavingsReports()
   const { createExpense, loading: creating }     = useCreateExpense()
@@ -43,7 +60,6 @@ export default function TrackExpenses() {
   const { deleteExpense, loading: deleting }     = useDeleteExpense()
   const { updateMonth,   loading: patching }     = useUpdateExpenseMonth()
 
-  // dialog & form state
   const [openDialog, setOpenDialog] = useState(false)
   const [editId,     setEditId]     = useState(null)
   const initialForm = {
@@ -62,19 +78,18 @@ export default function TrackExpenses() {
   const [form, setForm]           = useState(initialForm)
   const [apiErrors, setApiErrors] = useState({})
 
-  // open form for new
   const openCreate = () => {
     setEditId(null)
     setForm(initialForm)
     setApiErrors({})
     setOpenDialog(true)
   }
-  // open form for edit
+
   const openEdit = exp => {
     setEditId(exp.id)
     setForm({
       amount: exp.amount,
-      date: exp.date,
+      date:   exp.date?.slice(0,10) || '',
       category: exp.category,
       payment_method: exp.payment_method,
       currency: exp.currency,
@@ -88,6 +103,7 @@ export default function TrackExpenses() {
     setApiErrors({})
     setOpenDialog(true)
   }
+
   const closeDialog = () => setOpenDialog(false)
 
   const handleChange = e => {
@@ -98,7 +114,6 @@ export default function TrackExpenses() {
     }))
   }
 
-  // submit create/update
   const handleSubmit = async () => {
     const payload = {
       amount: parseFloat(form.amount),
@@ -125,7 +140,6 @@ export default function TrackExpenses() {
     }
   }
 
-  // delete an expense
   const handleDelete = async id => {
     if (!window.confirm('Delete this expense?')) return
     try {
@@ -134,7 +148,6 @@ export default function TrackExpenses() {
     } catch {}
   }
 
-  // patch month
   const handleMonth = async id => {
     const m = window.prompt('Enter new month (1–12):')
     const month = parseInt(m, 10)
@@ -144,6 +157,17 @@ export default function TrackExpenses() {
       await refetch()
     } catch {}
   }
+
+  // filter reports to match selected date’s month in the form
+  const filteredReports = (() => {
+    if (!form.date) return reports
+    const d = new Date(form.date), y = d.getFullYear(), m = d.getMonth()+1
+    return [...new Map(
+      reports
+        .filter(r=>r.year===y && r.month===m)
+        .map(r=>[r.id,r])
+    ).values()]
+  })()
 
   return (
     <Box
@@ -169,6 +193,7 @@ export default function TrackExpenses() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={openCreate}
+            disabled={creating}
             sx={{
               textTransform: 'none',
               background: 'linear-gradient(90deg, #2979FF, #40C4FF)',
@@ -177,11 +202,11 @@ export default function TrackExpenses() {
               }
             }}
           >
-            New Expense
+            + New Expense
           </Button>
         </Stack>
 
-        {/* Loading / Empty / List */}
+        {/* Loading / Empty / Fixed‐size Cards */}
         {loading ? (
           <Box sx={{ textAlign: 'center', mt: 8 }}>
             <CircularProgress color="inherit" />
@@ -203,12 +228,27 @@ export default function TrackExpenses() {
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={3}>
-            {expenses.map(exp => (
-              <Grid item xs={12} sm={6} md={4} key={exp.id}>
+          <Box
+            component="section"
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3,
+              justifyContent: 'flex-start'
+            }}
+          >
+            {expenses.map(exp => {
+              const prettyDate = new Date(exp.date).toLocaleDateString()
+              const Icon = categoryIcons[exp.category] || ShoppingCartIcon
+              return (
                 <Card
+                  key={exp.id}
                   elevation={0}
                   sx={{
+                    flex: '0 0 300px',
+                    height: 300,
+                    display: 'flex',
+                    flexDirection: 'column',
                     background: 'rgba(20,25,50,0.6)',
                     borderRadius: 3,
                     transition: 'transform 0.3s, box-shadow 0.3s',
@@ -218,47 +258,49 @@ export default function TrackExpenses() {
                     }
                   }}
                 >
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: '#40C4FF', mb: 1, fontWeight: 600 }}
-                    >
-                      ${Number(exp.amount || 0).toFixed(2)}
-                    </Typography>
-                    <Typography sx={{ color: '#EEE' }}>
+                  <CardContent sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                    <Icon sx={{ color:'#40C4FF', fontSize:32, mb:1 }} />
+                    <Typography variant="h6" sx={{ color: '#FFF', mb: 1 }}>
                       {exp.category.charAt(0).toUpperCase() + exp.category.slice(1)}
                     </Typography>
-                    <Typography sx={{ color: '#BBB', mt: 1 }}>
-                      {exp.date} — {exp.payment_method}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#BBB',
+                        mb: 1,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {exp.description || '—'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>
+                      {prettyDate}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#AAA', mb: 2 }}>
+                      Payment: {exp.payment_method.charAt(0).toUpperCase() + exp.payment_method.slice(1)}
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: '#40C4FF', fontWeight: 600 }}>
+                      ${Number(exp.amount || 0).toFixed(2)}
                     </Typography>
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'flex-end' }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMonth(exp.id)}
-                      sx={{ color: '#40C4FF' }}
-                    >
+                    <IconButton size="small" onClick={() => handleMonth(exp.id)} sx={{ color: '#40C4FF' }}>
                       <RestartAltIcon />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => openEdit(exp)}
-                      sx={{ color: '#FFF' }}
-                    >
+                    <IconButton size="small" onClick={() => openEdit(exp)} sx={{ color: '#FFF' }}>
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(exp.id)}
-                      sx={{ color: '#FF6B6B' }}
-                    >
+                    <IconButton size="small" onClick={() => handleDelete(exp.id)} sx={{ color: '#FF6B6B' }}>
                       <DeleteIcon />
                     </IconButton>
                   </CardActions>
                 </Card>
-              </Grid>
-            ))}
-          </Grid>
+              )
+            })}
+          </Box>
         )}
 
         {/* Create / Edit Dialog */}
@@ -267,6 +309,7 @@ export default function TrackExpenses() {
             {editId ? 'Edit Expense' : 'New Expense'}
           </DialogTitle>
           <DialogContent sx={{ display:'grid', gap:2, pt:3, background:'#12172E' }}>
+            {/* Amount */}
             <TextField
               label="Amount"
               name="amount"
@@ -280,6 +323,7 @@ export default function TrackExpenses() {
               helperText={apiErrors.amount?.[0]}
               fullWidth
             />
+            {/* Date */}
             <TextField
               label="Date"
               name="date"
@@ -293,6 +337,7 @@ export default function TrackExpenses() {
               helperText={apiErrors.date?.[0]}
               fullWidth
             />
+            {/* Category */}
             <TextField
               select
               label="Category"
@@ -312,6 +357,7 @@ export default function TrackExpenses() {
                 </MenuItem>
               ))}
             </TextField>
+            {/* Payment Method */}
             <TextField
               select
               label="Payment Method"
@@ -331,6 +377,7 @@ export default function TrackExpenses() {
                 </MenuItem>
               ))}
             </TextField>
+            {/* Description */}
             <TextField
               label="Description"
               name="description"
@@ -345,6 +392,7 @@ export default function TrackExpenses() {
               helperText={apiErrors.description?.[0]}
               fullWidth
             />
+            {/* Savings Report */}
             <TextField
               select
               label="Report"
@@ -360,18 +408,18 @@ export default function TrackExpenses() {
             >
               {reportsLoading
                 ? <MenuItem disabled>Loading…</MenuItem>
-                : reports.map(r => (
-                    <MenuItem key={r.id} value={r.id}>
-                      {r.year}/{r.month.toString().padStart(2, '0')}
-                    </MenuItem>
-                  ))
+                : filteredReports.length > 0
+                  ? filteredReports.map(r => (
+                      <MenuItem key={r.id} value={r.id}>
+                        {r.year}/{String(r.month).padStart(2,'0')}
+                      </MenuItem>
+                    ))
+                  : <MenuItem disabled>No report for that month</MenuItem>
               }
             </TextField>
           </DialogContent>
           <DialogActions sx={{ background:'#12172E', px:3, pb:2 }}>
-            <Button onClick={closeDialog} sx={{ color:'#BBB' }}>
-              Cancel
-            </Button>
+            <Button onClick={closeDialog} sx={{ color:'#BBB' }}>Cancel</Button>
             <Button
               onClick={handleSubmit}
               variant="contained"
@@ -386,6 +434,7 @@ export default function TrackExpenses() {
             </Button>
           </DialogActions>
         </Dialog>
+
       </Container>
     </Box>
   )

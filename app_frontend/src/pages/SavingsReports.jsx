@@ -6,7 +6,6 @@ import {
   Stack,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   Dialog,
@@ -15,27 +14,24 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  CircularProgress
+  CircularProgress,
+  IconButton
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import ArticleIcon from '@mui/icons-material/Article'
 
-import useGetSavingsReports     from '../hooks/useGetSavingsReports'
-import useCreateSavingsReport   from '../hooks/useCreateSavingsReport'
+import useGetSavingsReports   from '../hooks/useGetSavingsReports'
+import useCreateSavingsReport from '../hooks/useCreateSavingsReport'
 
 export default function SavingsReports() {
   const { reports, loading, refetch } = useGetSavingsReports()
   const {
     createReport,
     loading: creating,
-    error: createError
   } = useCreateSavingsReport()
 
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({
-    year: '',
-    month: '',
-    notes: ''
-  })
+  const [open, setOpen]       = useState(false)
+  const [form, setForm]       = useState({ year: '', month: '', notes: '' })
   const [apiErrors, setApiErrors] = useState({})
 
   const openDialog = () => {
@@ -54,7 +50,7 @@ export default function SavingsReports() {
     try {
       setApiErrors({})
       await createReport({
-        year: parseInt(form.year, 10),
+        year:  parseInt(form.year, 10),
         month: parseInt(form.month, 10),
         notes: form.notes || null
       })
@@ -90,6 +86,7 @@ export default function SavingsReports() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={openDialog}
+            disabled={creating}
             sx={{
               textTransform: 'none',
               background: 'linear-gradient(90deg, #2979FF, #40C4FF)',
@@ -124,36 +121,55 @@ export default function SavingsReports() {
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={3}>
+          <Box
+            component="section"
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3,
+              justifyContent: 'flex-start'
+            }}
+          >
             {reports.map(r => (
-              <Grid item xs={12} sm={6} key={r.id}>
-                <Card
-                  elevation={0}
+              <Card
+                key={r.id}
+                elevation={0}
+                sx={{
+                  flex: '0 0 280px',             // fixed width
+                  height: 220,                   // fixed height
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: 'rgba(20,25,50,0.6)',
+                  borderRadius: 3,
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-6px)',
+                    boxShadow: '0 12px 24px rgba(0,0,0,0.3)'
+                  }
+                }}
+              >
+                <CardContent
                   sx={{
-                    background: 'rgba(20,25,50,0.6)',
-                    borderRadius: 3,
-                    transition: 'transform 0.3s, box-shadow 0.3s',
-                    '&:hover': {
-                      transform: 'translateY(-6px)',
-                      boxShadow: '0 12px 24px rgba(0,0,0,0.3)'
-                    }
+                    flexGrow: 1,
+                    textAlign: 'center',
+                    color: '#FFF',
+                    p: 3
                   }}
                 >
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: '#40C4FF', mb: 1, fontWeight: 600 }}
-                    >
-                      {r.year} / {r.month.toString().padStart(2, '0')}
-                    </Typography>
-                    <Typography sx={{ color: '#EEE' }}>
-                      {r.notes || '—'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                  <ArticleIcon sx={{ fontSize: 32, color: '#40C4FF', mb: 1 }} />
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 1, fontWeight: 600 }}
+                  >
+                    {r.year}/{String(r.month).padStart(2, '0')}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#DDD' }}>
+                    {r.notes || '—'}
+                  </Typography>
+                </CardContent>
+              </Card>
             ))}
-          </Grid>
+          </Box>
         )}
 
         {/* Create Dialog */}
