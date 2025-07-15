@@ -14,8 +14,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Breadcrumbs,
+  Link as MUILink
 } from '@mui/material'
+import { Link as RouterLink } from 'react-router-dom'
 import AddIcon from '@mui/icons-material/Add'
 
 import useGetExpenses        from '../hooks/useGetExpenses'
@@ -26,12 +29,12 @@ import useDeleteExpense      from '../hooks/useDeleteExpense'
 import useUpdateExpenseMonth from '../hooks/useUpdateExpenseMonth'
 import Card                  from '../components/Card'
 
-// must exactly match your backend Rule::in([...])
+// must exactly match backend Rule::in([...])
 const CATEGORIES = [
   'All',
   'shopping',
   'food',
-  'medicines',
+  'medications',
   'sports_and_recreation',
   'entertainment',
   'bills'
@@ -45,7 +48,6 @@ const SORT_OPTIONS = [
 const ROWS_PER_PAGE = 6
 
 export default function TrackExpenses() {
-  // data hooks
   const { expenses, loading, refetch }       = useGetExpenses()
   const { reports, loading: reportsLoading } = useGetSavingsReports()
   const { createExpense, loading: creating } = useCreateExpense()
@@ -54,20 +56,20 @@ export default function TrackExpenses() {
   const { updateMonth }                      = useUpdateExpenseMonth()
 
   // UI state
-  const [catFilter, setCatFilter]     = useState('All')
-  const [sortOrder, setSortOrder]     = useState('asc')
-  const [page,      setPage]          = useState(1)
-  const [openDialog, setOpenDialog]   = useState(false)
-  const [editItem,   setEditItem]     = useState(null)
-  const [form,       setForm]         = useState({
+  const [catFilter, setCatFilter] = useState('All')
+  const [sortOrder, setSortOrder] = useState('asc')
+  const [page,      setPage]      = useState(1)
+  const [openDialog, setOpenDialog] = useState(false)
+  const [editItem,   setEditItem]   = useState(null)
+  const [form,       setForm]       = useState({
     amount: '', date: '', category: '', payment_method: '',
     currency: 'USD', receipt_image: '', is_recurring: false,
     recurring_interval: '', tags: [], description: '',
     savings_report_id: ''
   })
-  const [apiErrors, setApiErrors]     = useState({})
+  const [apiErrors, setApiErrors] = useState({})
 
-  // filter & sort
+  // filter + sort
   const filtered = useMemo(() => {
     let arr = expenses
     if (catFilter !== 'All') {
@@ -89,7 +91,7 @@ export default function TrackExpenses() {
     return filtered.slice(start, start + ROWS_PER_PAGE)
   }, [filtered, page])
 
-  // open / prepare dialog
+  // dialog handlers
   const openCreate = () => {
     setEditItem(null)
     setForm({
@@ -130,7 +132,7 @@ export default function TrackExpenses() {
     }))
   }
 
-  // submit create / update
+  // submit create/update
   const handleSubmit = async () => {
     const payload = {
       amount:            parseFloat(form.amount),
@@ -179,7 +181,29 @@ export default function TrackExpenses() {
       py:8
     }}>
       <Container maxWidth="lg">
-        {/* ── Top bar: title + filters + create ── */}
+        {/* ── Breadcrumb */}
+        <Box mb={2}>
+          <Breadcrumbs
+  separator="›"
+  aria-label="breadcrumb"
+  sx={{
+    '& .MuiBreadcrumbs-separator': {
+      color: '#FFF'
+    }
+  }}
+>
+            <MUILink
+              component={RouterLink}
+              to="/home"
+              sx={{ color: '#FFF', '&:hover': { textDecoration: 'underline' } }}
+            >
+              Home
+            </MUILink>
+            <Typography color="#FFF">Track Expenses</Typography>
+          </Breadcrumbs>
+        </Box>
+
+        {/* ── Top bar */}
         <Stack
           direction={{ xs:'column', sm:'row' }}
           spacing={2}
@@ -191,7 +215,6 @@ export default function TrackExpenses() {
             Your Expenses
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
-            {/* Category */}
             <TextField
               select
               label="Category"
@@ -216,7 +239,6 @@ export default function TrackExpenses() {
                 </MenuItem>
               ))}
             </TextField>
-            {/* Sort */}
             <TextField
               select
               label="Sort by Amount"
@@ -236,7 +258,6 @@ export default function TrackExpenses() {
                 </MenuItem>
               ))}
             </TextField>
-            {/* New Expense */}
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -252,7 +273,7 @@ export default function TrackExpenses() {
           </Stack>
         </Stack>
 
-        {/* ── Loading / Empty / Grid ── */}
+        {/* ── Content */}
         {loading ? (
           <Box sx={{ textAlign:'center', mt:8 }}>
             <CircularProgress color="inherit"/>
@@ -293,13 +314,12 @@ export default function TrackExpenses() {
           </>
         )}
 
-        {/* ── Create / Edit Dialog ── */}
+        {/* ── Dialog */}
         <Dialog open={openDialog} onClose={closeDialog} fullWidth maxWidth="sm">
           <DialogTitle sx={{ background:'#12172E', color:'#FFF' }}>
             {editItem ? 'Edit Expense' : 'New Expense'}
           </DialogTitle>
           <DialogContent sx={{ display:'grid', gap:2, pt:3, background:'#12172E' }}>
-            {/* Amount */}
             <TextField
               label="Amount" name="amount" type="number" variant="filled"
               InputLabelProps={{ sx:{ color:'#AAA' } }}
@@ -308,7 +328,6 @@ export default function TrackExpenses() {
               error={Boolean(apiErrors.amount)} helperText={apiErrors.amount?.[0]}
               fullWidth
             />
-            {/* Date */}
             <TextField
               label="Date" name="date" type="date" variant="filled"
               InputLabelProps={{ sx:{ color:'#AAA' }, shrink:true }}
@@ -317,7 +336,6 @@ export default function TrackExpenses() {
               error={Boolean(apiErrors.date)} helperText={apiErrors.date?.[0]}
               fullWidth
             />
-            {/* Category */}
             <TextField
               select label="Category" name="category" variant="filled"
               InputLabelProps={{ sx:{ color:'#AAA' } }}
@@ -330,12 +348,11 @@ export default function TrackExpenses() {
                 <MenuItem key={c} value={c}>
                   {c
                     .split('_')
-                    .map(w=>w.charAt(0).toUpperCase()+w.slice(1))
+                    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
                     .join(' ')}
                 </MenuItem>
               ))}
             </TextField>
-            {/* Payment */}
             <TextField
               select label="Payment" name="payment_method" variant="filled"
               InputLabelProps={{ sx:{ color:'#AAA' } }}
@@ -346,11 +363,10 @@ export default function TrackExpenses() {
             >
               {['cash','card'].map(m => (
                 <MenuItem key={m} value={m}>
-                  {m.charAt(0).toUpperCase()+m.slice(1)}
+                  {m.charAt(0).toUpperCase() + m.slice(1)}
                 </MenuItem>
               ))}
             </TextField>
-            {/* Description */}
             <TextField
               label="Description" name="description" variant="filled"
               multiline rows={2}
@@ -360,7 +376,6 @@ export default function TrackExpenses() {
               error={Boolean(apiErrors.description)} helperText={apiErrors.description?.[0]}
               fullWidth
             />
-            {/* Report */}
             <TextField
               select label="Report" name="savings_report_id" variant="filled"
               InputLabelProps={{ sx:{ color:'#AAA' } }}
@@ -380,9 +395,7 @@ export default function TrackExpenses() {
             </TextField>
           </DialogContent>
           <DialogActions sx={{ background:'#12172E', px:3, pb:2 }}>
-            <Button onClick={closeDialog} sx={{ color:'#BBB' }}>
-              Cancel
-            </Button>
+            <Button onClick={closeDialog} sx={{ color:'#BBB' }}>Cancel</Button>
             <Button
               onClick={handleSubmit}
               variant="contained"

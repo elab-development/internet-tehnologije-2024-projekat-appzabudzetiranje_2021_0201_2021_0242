@@ -1,10 +1,25 @@
+// src/pages/SavingsReports.jsx
 import React, { useState } from 'react'
 import {
-  Box, Container, Stack, Typography, Button,
-  Grid, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, MenuItem, CircularProgress
+  Box,
+  Container,
+  Stack,
+  Typography,
+  Button,
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+  CircularProgress,
+  Breadcrumbs,
+  Link as MUILink
 } from '@mui/material'
+import { Link as RouterLink } from 'react-router-dom'
 import AddIcon from '@mui/icons-material/Add'
+
 import useGetSavingsReports   from '../hooks/useGetSavingsReports'
 import useCreateSavingsReport from '../hooks/useCreateSavingsReport'
 import Card                  from '../components/Card'
@@ -51,6 +66,28 @@ export default function SavingsReports() {
       py:8
     }}>
       <Container maxWidth="md">
+        {/* ── Breadcrumb */}
+        <Box mb={2}>
+          <Breadcrumbs
+  separator="›"
+  aria-label="breadcrumb"
+  sx={{
+    '& .MuiBreadcrumbs-separator': {
+      color: '#FFF'
+    }
+  }}
+>
+            <MUILink
+              component={RouterLink}
+              to="/home"
+              sx={{ color: '#FFF', '&:hover': { textDecoration: 'underline' } }}
+            >
+              Home
+            </MUILink>
+            <Typography color="#FFF">Savings Reports</Typography>
+          </Breadcrumbs>
+        </Box>
+
         <Stack
           direction={{ xs:'column',sm:'row' }}
           alignItems="center"
