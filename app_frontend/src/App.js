@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Auth from './pages/Auth'
 import Home from './pages/Home'
+import TrackExpenses from './pages/TrackExpenses'
+import SavingsReports from './pages/SavingsReports'
 import NavigationMenu from './components/NavigationMenu'
 import Footer from './components/Footer'
 
@@ -41,6 +43,16 @@ function App() {
         <Route
           path="/home"
           element={token ? <Home /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/expenses"
+          element={token ? <TrackExpenses /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/savings-reports"
+          element={token ? <SavingsReports /> : <Navigate to="/" />}
         />
       </Routes>
       {token && <Footer/>}
