@@ -1,17 +1,20 @@
 // src/pages/Home.jsx
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Container,
   Typography,
   Button,
   Card,
-  CardContent
+  CardContent,
+  Grid,
+  CircularProgress,
+  Rating
 } from '@mui/material'
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
-import ShowChartIcon from '@mui/icons-material/ShowChart'
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import { useNavigate } from 'react-router-dom'
+import ShowChartIcon            from '@mui/icons-material/ShowChart'
+import EmojiEventsIcon          from '@mui/icons-material/EmojiEvents'
+import { useNavigate }          from 'react-router-dom'
 
 const features = [
   {
@@ -35,17 +38,37 @@ const features = [
 ]
 
 export default function Home() {
-  const navigate   = useNavigate()
-  const raw = sessionStorage.getItem('user')
-  const user = raw ? JSON.parse(raw) : {}
-  const name = user.name || 'User'
+  const navigate = useNavigate()
+  const raw      = sessionStorage.getItem('user')
+  const user     = raw ? JSON.parse(raw) : {}
+  const name     = user.name || 'User'
+
+  // fetch 3 random reviews
+  const [reviews, setReviews]       = useState([])
+  const [reviewsLoading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('https://randomuser.me/api/?results=3')
+      .then(res => res.json())
+      .then(data => {
+        setReviews(
+          data.results.map(u => ({
+            id: u.login.uuid,
+            name: `${u.name.first} ${u.name.last}`,
+            picture: u.picture.large
+          }))
+        )
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0D1122 0%, #12172E 100%)',
-        py: 8,
+        py: 8
       }}
     >
       <Container maxWidth="lg">
@@ -118,7 +141,7 @@ export default function Home() {
           />
         </Box>
 
-        {/* Feature Cards – all in one horizontal row */}
+        {/* Feature Cards */}
         <Box
           sx={{
             display: 'flex',
@@ -187,6 +210,67 @@ export default function Home() {
             </Card>
           ))}
         </Box>
+
+        {/* Our Reviews Section */}
+        <Card
+          elevation={0}
+          sx={{
+            mt: 8,
+            p: 4,
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 3,
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{ color: '#FFF', fontWeight: 600, mb: 4, textAlign: 'center' }}
+          >
+            Our Reviews
+          </Typography>
+
+          {reviewsLoading ? (
+            <Box sx={{ textAlign: 'center', py: 6 }}>
+              <CircularProgress color="inherit" />
+            </Box>
+          ) : (
+            <Grid container spacing={4} justifyContent="center">
+              {reviews.map(r => (
+                <Grid item xs={12} sm={4} key={r.id}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      px: 2
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={r.picture}
+                      alt={r.name}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        mb: 2,
+                        objectFit: 'cover'
+                      }}
+                    />
+                    <Typography sx={{ color: '#FFF', fontWeight: 600, mb: 1 }}>
+                      {r.name}
+                    </Typography>
+                    <Rating value={5} readOnly size="small" sx={{ mb: 1, color: '#FFD700' }} />
+                    <Typography sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                      “The service was good.”
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Card>
       </Container>
     </Box>
   )
