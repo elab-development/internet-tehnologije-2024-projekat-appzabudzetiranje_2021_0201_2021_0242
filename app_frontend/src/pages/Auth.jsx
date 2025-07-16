@@ -106,7 +106,7 @@ const Auth = () => {
       sessionStorage.setItem('token', data.token)
       sessionStorage.setItem('user', JSON.stringify(data.user))
 
-      navigate('/home')
+      isRegister ? navigate('/') : navigate('/home') 
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong')
     } finally {
