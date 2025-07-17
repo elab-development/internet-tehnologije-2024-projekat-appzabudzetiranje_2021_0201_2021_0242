@@ -71,7 +71,7 @@ export default function NavigationMenu() {
   const [anchorEl, setAnchorEl] = useState(null)
 
   const items = [
-    { label: 'Home',           path: '/' },
+    { label: 'Home',           path: '/home' },
     { label: 'Track Expenses', path: '/expenses' },
     { label: 'Savings Reports',path: '/savings-reports' },
   ]
