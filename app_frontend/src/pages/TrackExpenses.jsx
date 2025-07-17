@@ -34,7 +34,7 @@ const CATEGORIES = [
   'All',
   'shopping',
   'food',
-  'medications',
+  'medicines',
   'sports_and_recreation',
   'entertainment',
   'bills'

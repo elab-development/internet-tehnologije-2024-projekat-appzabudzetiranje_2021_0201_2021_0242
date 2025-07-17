@@ -20,8 +20,8 @@ import TheatersIcon      from '@mui/icons-material/Theaters'
 const categoryIcons = {
   shopping: ShoppingCartIcon,
   food: FastfoodIcon,
-  medications: LocalPharmacyIcon,
-  sports: FitnessCenterIcon,
+  medicines: LocalPharmacyIcon,
+  sports_and_recreation: FitnessCenterIcon,
   entertainment: TheatersIcon,
   bills: DescriptionIcon,
 }
