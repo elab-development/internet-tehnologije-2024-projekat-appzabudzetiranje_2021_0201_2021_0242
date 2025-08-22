@@ -74,6 +74,7 @@ export default function NavigationMenu() {
     { label: 'Home',           path: '/home' },
     { label: 'Track Expenses', path: '/expenses' },
     { label: 'Savings Reports',path: '/savings-reports' },
+    { label: 'My Savings Groups',path: '/my-savings-groups' },
   ]
 
   const handleMenuOpen = e => setAnchorEl(e.currentTarget)
@@ -163,22 +164,6 @@ export default function NavigationMenu() {
               }
             }}
           >
-            <MenuItem
-              onClick={() => {
-                handleMenuClose()
-                navigate('/notifications')
-              }}
-            >
-              Notifications
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                handleMenuClose()
-                navigate('/profile/edit')
-              }}
-            >
-              Edit Profile
-            </MenuItem>
             <MenuItem
               onClick={() => {
                 handleMenuClose()

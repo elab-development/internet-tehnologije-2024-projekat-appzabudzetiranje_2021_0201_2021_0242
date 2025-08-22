@@ -7,6 +7,7 @@ import TrackExpenses from './pages/TrackExpenses'
 import SavingsReports from './pages/SavingsReports'
 import NavigationMenu from './components/NavigationMenu'
 import Footer from './components/Footer'
+import MySavingsGroups from './pages/MySavingsGroups'
 
 function App() {
   // local state for the token
@@ -53,6 +54,11 @@ function App() {
         <Route
           path="/savings-reports"
           element={token ? <SavingsReports /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/my-savings-groups"
+          element={token ? <MySavingsGroups /> : <Navigate to="/" />}
         />
       </Routes>
       {token && <Footer/>}
