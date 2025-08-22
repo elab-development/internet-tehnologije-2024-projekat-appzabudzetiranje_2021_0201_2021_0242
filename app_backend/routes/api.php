@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\SavingsReportController;
+use App\Http\Controllers\GroupMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,8 +28,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
 
     // Groups (only regular)
-    Route::apiResource('groups', GroupController::class);
+    Route::get ('groups/{id}/messages', [GroupMessageController::class, 'index']);
+    Route::post('groups/{id}/messages', [GroupMessageController::class, 'store']);
     Route::post('groups/{id}/join', [GroupController::class, 'join']);
+    Route::post('groups/{id}/members', [GroupController::class, 'addMember']); 
+
+    Route::apiResource('groups', GroupController::class);
 
     // Savings Reports (only regular) 
     Route::get   ('savings-reports/statistics', [SavingsReportController::class, 'statistics']);

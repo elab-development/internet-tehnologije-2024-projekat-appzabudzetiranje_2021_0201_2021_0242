@@ -171,4 +171,24 @@ class GroupController extends Controller
         return new GroupResource($group);
     }
 
+    public function addMember(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (! $user) return response()->json(['error' => 'Unauthenticated.'], 401);
+        if ($user->role !== 'regular') return response()->json(['error' => 'You do not have permission.'], 403);
+
+        $data = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $group = Group::with('users')->find($id);
+        if (! $group) return response()->json(['error' => 'Group not found.'], 404);
+
+        $group->users()->syncWithoutDetaching([$data['user_id']]);
+        $group->load('users');
+
+        return new GroupResource($group);
+    }
+
+
 }

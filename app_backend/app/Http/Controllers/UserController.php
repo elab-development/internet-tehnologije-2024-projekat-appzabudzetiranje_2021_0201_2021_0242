@@ -12,23 +12,39 @@ use App\Http\Resources\UserResource;
 class UserController extends Controller
 {
     /**
-     * List all users.
+     * List users (optionally filtered by ?search=).
      * Accessible by regular or administrator.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $me   = Auth::user();
+        $me = Auth::user();
         if (! $me) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
 
-        $role = $me->role;
-        if (in_array($role, ['regular', 'administrator'])) {
-            $users = User::all();
-            return UserResource::collection($users);
+        if (! in_array($me->role, ['regular', 'administrator'])) {
+            return response()->json(['error' => 'You do not have permission.'], 403);
         }
 
-        return response()->json(['error' => 'You do not have permission.'], 403);
+        $term  = trim((string) $request->query('search', ''));
+        $users = User::query()
+            // exclude myself so I don't add me
+            ->where('id', '!=', $me->id)
+            // apply search when provided; group ORs correctly
+            ->when($term !== '', function ($q) use ($term) {
+                $like = '%'.$term.'%';
+                $q->where(function ($qq) use ($like) {
+                    $qq->where('name', 'like', $like)
+                    ->orWhere('surname', 'like', $like)
+                    ->orWhere('email', 'like', $like);
+                });
+            })
+            ->orderBy('name')
+            ->orderBy('surname')
+            ->limit(20)
+            ->get();
+
+        return UserResource::collection($users);
     }
 
     /**
@@ -79,4 +95,5 @@ class UserController extends Controller
         $user->delete();
         return response()->json(['message' => 'User deleted successfully.'], 200);
     }
+
 }
