@@ -12,68 +12,97 @@ import AdminDashboard from './pages/AdminDashboard'
 import UserManagement from './pages/UserManagement'
 
 function App() {
-  // local state for the token
-  const [token, setToken] = useState(sessionStorage.getItem('token'))
+  // keep token in state; always a string ('' when unauthenticated) for stability
+  const [token, setToken] = useState(() => sessionStorage.getItem('token') || '')
 
+  // derive user/role from sessionStorage (no effects needed)
+  const userRaw = sessionStorage.getItem('user')
+  const user    = userRaw ? JSON.parse(userRaw) : {}
+  const role    = String(user?.role || '').toLowerCase()
+  const landing = role === 'administrator' ? '/admin-dashboard' : '/home'
+
+  // sync token from other tabs / login page changes WITHOUT dynamic deps
   useEffect(() => {
-    const interval = setInterval(() => {
-      const stored = sessionStorage.getItem('token')
-      if (stored !== token) {
-        setToken(stored)
-      }
-    }, 1000)
+    const sync = () => setToken(sessionStorage.getItem('token') || '')
+    const onVis = () => { if (document.visibilityState === 'visible') sync() }
 
-    return () => clearInterval(interval)
-  }, [token])
+    window.addEventListener('storage', sync)
+    document.addEventListener('visibilitychange', onVis)
+
+    // small timer to catch immediate changes from the Auth page
+    const id = setInterval(sync, 1000)
+
+    return () => {
+      window.removeEventListener('storage', sync)
+      document.removeEventListener('visibilitychange', onVis)
+      clearInterval(id)
+    }
+  }, []) // ✅ array length is constant
+
+  // Guard for routes with optional role checks (no useEffect inside)
+  const RequireAuth = ({ children, roles }) => {
+    const hasToken = !!(sessionStorage.getItem('token') || '')
+    if (!hasToken) return <Navigate to="/" replace />
+    if (roles?.length && !roles.includes(role)) return <Navigate to="/home" replace />
+    return children
+  }
 
   return (
     <BrowserRouter>
-      {/* menu only when we have a token */}
       {token && <NavigationMenu />}
 
       <Routes>
-        {/* auth pages redirect if already logged in */}
+        {/* Auth: if logged in, go to role-based landing */}
         <Route
           path="/"
-          element={token ? <Navigate to="/home" /> : <Auth />}
+          element={token ? <Navigate to={landing} replace /> : <Auth />}
         />
         <Route
           path="/register"
-          element={token ? <Navigate to="/home" /> : <Auth />}
+          element={token ? <Navigate to={landing} replace /> : <Auth />}
         />
 
-        {/* protected home */}
+        {/* Regular protected */}
         <Route
           path="/home"
-          element={token ? <Home /> : <Navigate to="/" />}
+          element={<RequireAuth><Home /></RequireAuth>}
         />
-
         <Route
           path="/expenses"
-          element={token ? <TrackExpenses /> : <Navigate to="/" />}
+          element={<RequireAuth><TrackExpenses /></RequireAuth>}
         />
-
         <Route
           path="/savings-reports"
-          element={token ? <SavingsReports /> : <Navigate to="/" />}
+          element={<RequireAuth><SavingsReports /></RequireAuth>}
         />
-
         <Route
           path="/my-savings-groups"
-          element={token ? <MySavingsGroups /> : <Navigate to="/" />}
+          element={<RequireAuth><MySavingsGroups /></RequireAuth>}
         />
 
+        {/* Admin-only */}
         <Route
           path="/admin-dashboard"
-          element={token ? <AdminDashboard /> : <Navigate to="/" />}
+          element={
+            <RequireAuth roles={['administrator']}>
+              <AdminDashboard />
+            </RequireAuth>
+          }
         />
-
         <Route
           path="/user-management"
-          element={token ? <UserManagement /> : <Navigate to="/" />}
+          element={
+            <RequireAuth roles={['administrator']}>
+              <UserManagement />
+            </RequireAuth>
+          }
         />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={token ? landing : '/'} replace />} />
       </Routes>
-      {token && <Footer/>}
+
+      {token && <Footer />}
     </BrowserRouter>
   )
 }

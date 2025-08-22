@@ -103,7 +103,7 @@ const Auth = () => {
         // route by role
         const dest =
           (data?.user?.role === 'administrator') ? '/admin-dashboard' : '/home'
-        navigate(dest)
+        window.location.replace(dest);
       } else {
         // after registering, go back to login screen
         navigate('/')
