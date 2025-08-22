@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Savings Reports (only regular) 
     Route::get   ('savings-reports/statistics', [SavingsReportController::class, 'statistics']);
+    Route::get   ('savings-reports/{id}/analytics', [SavingsReportController::class, 'analytics']);
     Route::get   ('savings-reports',            [SavingsReportController::class, 'index']);
     Route::post  ('savings-reports',            [SavingsReportController::class, 'store']);
     Route::get   ('savings-reports/{id}',       [SavingsReportController::class, 'show']);
