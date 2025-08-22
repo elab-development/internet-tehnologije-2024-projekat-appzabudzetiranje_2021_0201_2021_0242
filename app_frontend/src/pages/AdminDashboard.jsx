@@ -11,10 +11,18 @@ import {
   Chip,
   CircularProgress,
   IconButton,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import MailOutlineIcon from '@mui/icons-material/MailOutline'
 import axios from 'axios'
 import {
   ResponsiveContainer,
@@ -126,6 +134,12 @@ export default function AdminDashboard() {
   const [newsLoading, setNewsLoading] = useState(true)
   const [newsError, setNewsError] = useState(null)
 
+  // Email modal state
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [emailTo, setEmailTo] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [toast, setToast] = useState({ open: false, severity: 'success', msg: '' })
+
   useEffect(() => {
     (async () => {
       try {
@@ -139,7 +153,7 @@ export default function AdminDashboard() {
     })()
   }, [])
 
-  // Fetch free public news (with images). No API key required.
+  // Fetch free public news (images, no key)
   useEffect(() => {
     (async () => {
       try {
@@ -213,6 +227,66 @@ export default function AdminDashboard() {
     el.scrollBy({ left: el.clientWidth * 0.9 * dir, behavior: 'smooth' })
   }
 
+  /* ------- Email content & send ------- */
+  const emailBody = useMemo(() => {
+    const lines = []
+    lines.push('Savings Reports — Admin Summary')
+    lines.push(`Generated: ${new Date().toLocaleString()}`)
+    lines.push('')
+    lines.push(`Total: ${fmtCurrency(kpis.total)}`)
+    lines.push(`Reports: ${kpis.reports}`)
+    lines.push(`Items: ${kpis.items}`)
+    lines.push(`Avg per item: ${fmtCurrency(kpis.avg)}`)
+    lines.push('')
+    lines.push('Top Months (by total):')
+    topMonths.slice().reverse().forEach(m => {
+      lines.push(` - ${m.month}: ${fmtCurrency(m.total)}`)
+    })
+    lines.push('')
+    lines.push('Last 12 Months (total):')
+    last12.forEach(m => {
+      lines.push(` - ${m.month}: ${fmtCurrency(m.total)}`)
+    })
+    return lines.join('\n')
+  }, [kpis, topMonths, last12])
+
+  const validEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+
+  const sendEmail = async () => {
+    if (!validEmail(emailTo)) {
+      setToast({ open: true, severity: 'error', msg: 'Please enter a valid email address.' })
+      return
+    }
+    setEmailSending(true)
+    try {
+      // Free public service: FormSubmit (no API key).
+      // It may ask the recipient to confirm once; after that, messages deliver.
+      const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(emailTo.trim())}`
+      await axios.post(endpoint, {
+        _subject: 'Savings Reports — Admin Statistics',
+        message: emailBody,
+        _captcha: 'false'
+      }, { headers: { 'Content-Type': 'application/json' } })
+
+      setToast({ open: true, severity: 'success', msg: 'Report sent successfully.' })
+      setEmailOpen(false)
+    } catch (e) {
+      // Fallback: open mail client with prefilled subject/body
+      const subj = encodeURIComponent('Savings Reports — Admin Statistics')
+      const body = encodeURIComponent(emailBody)
+      window.location.href = `mailto:${encodeURIComponent(emailTo.trim())}?subject=${subj}&body=${body}`
+      setToast({
+        open: true,
+        severity: 'info',
+        msg: 'Opened your email client to send the report.'
+      })
+      setEmailOpen(false)
+    } finally {
+      setEmailSending(false)
+    }
+  }
+
   return (
     <Box sx={{
       minHeight: '100vh',
@@ -221,7 +295,7 @@ export default function AdminDashboard() {
       py: 8
     }}>
       <Container maxWidth="lg">
-        <Stack spacing={1} mb={3}>
+        <Stack spacing={1} mb={1}>
           <Typography variant="h4" sx={{ color:'#FFF', fontWeight: 800 }}>
             Welcome Administrator!
           </Typography>
@@ -230,12 +304,25 @@ export default function AdminDashboard() {
           </Typography>
         </Stack>
 
-        {/* KPIs */}
-        <Stack direction="row" spacing={1.5} flexWrap="wrap" mb={2}>
+        {/* KPIs + Email button */}
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" mb={2} alignItems="center">
           <StatChip label={`Total: ${fmtCurrency0(kpis.total)}`} />
           <StatChip label={`Reports: ${kpis.reports}`} />
           <StatChip label={`Items: ${kpis.items}`} />
           <StatChip label={`Avg per item: ${fmtCurrency0(kpis.avg)}`} />
+          <Box sx={{ flexGrow: 1 }} />
+          <Button
+            startIcon={<MailOutlineIcon />}
+            onClick={() => setEmailOpen(true)}
+            variant="contained"
+            sx={{
+              textTransform:'none',
+              background:'linear-gradient(90deg,#2979FF,#40C4FF)',
+              '&:hover': { background:'linear-gradient(90deg,#1565C0,#00B0FF)' }
+            }}
+          >
+            Email Report
+          </Button>
         </Stack>
 
         {loading ? (
@@ -246,7 +333,7 @@ export default function AdminDashboard() {
           <Box sx={{
             p: 4, textAlign:'center',
             background:'rgba(255,84,84,0.1)',
-            border: '1px solid rgba(255,84,84,0.35)',
+            border: '1px solid rgba(255,255,255,0.35)',
             borderRadius: 3,
             color:'#FFD1D1'
           }}>
@@ -261,7 +348,6 @@ export default function AdminDashboard() {
                   title="Top Months by Total (Top 8)"
                   subtitle="Across all users • Horizontal bar"
                 >
-                  {/* keep previous sizing */}
                   <Box sx={{ height: 380, width: 500 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
@@ -286,7 +372,6 @@ export default function AdminDashboard() {
                   title="Last 12 Months Trend"
                   subtitle="Sum of totals per month"
                 >
-                  {/* keep previous sizing */}
                   <Box sx={{ height: 380, width: 500 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={last12} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
@@ -307,7 +392,7 @@ export default function AdminDashboard() {
                 </ChartCard>
               </Grid>
 
-              {/* NEWS WIDGET — full width slider (same row width as the two cards above) */}
+              {/* NEWS WIDGET — full width slider */}
               <Grid item xs={12}>
                 <ChartCard
                   title="Latest News"
@@ -321,7 +406,6 @@ export default function AdminDashboard() {
                     <Typography sx={{ color:'#FFD1D1' }}>{newsError}</Typography>
                   ) : (
                     <Box sx={{ position:'relative' }}>
-                      {/* arrows */}
                       <IconButton
                         size="small"
                         onClick={() => scrollByPage(-1)}
@@ -345,7 +429,6 @@ export default function AdminDashboard() {
                         <ChevronRightIcon/>
                       </IconButton>
 
-                      {/* slider track */}
                       <Box
                         ref={trackRef}
                         sx={{
@@ -424,6 +507,72 @@ export default function AdminDashboard() {
             </Grid>
           </>
         )}
+
+        {/* Email modal */}
+        <Dialog open={emailOpen} onClose={() => setEmailOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle sx={{ background:'#12172E', color:'#FFF' }}>
+            Email Report
+          </DialogTitle>
+          <DialogContent sx={{ background:'#12172E' }}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Recipient email"
+              type="email"
+              fullWidth
+              variant="filled"
+              value={emailTo}
+              onChange={(e)=>setEmailTo(e.target.value)}
+              InputLabelProps={{ sx:{ color:'#AAB4CF' } }}
+              InputProps={{ sx:{ color:'#FFF', background:'rgba(255,255,255,0.06)', borderRadius: 1 } }}
+              placeholder="name@example.com"
+            />
+            <Box sx={{
+              mt:2, p:2,
+              color:'#BFD9FF',
+              background:'rgba(255,255,255,0.04)',
+              border:'1px solid rgba(255,255,255,0.08)',
+              borderRadius:2,
+              fontFamily:'monospace',
+              whiteSpace:'pre-wrap',
+              maxHeight:220,
+              overflow:'auto'
+            }}>
+              {emailBody}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ background:'#12172E', px:3, pb:2 }}>
+            <Button onClick={()=>setEmailOpen(false)} sx={{ color:'#BFC8E0' }}>Cancel</Button>
+            <Button
+              onClick={sendEmail}
+              disabled={emailSending}
+              variant="contained"
+              startIcon={<MailOutlineIcon />}
+              sx={{
+                textTransform:'none',
+                background:'linear-gradient(90deg,#2979FF,#40C4FF)',
+                '&:hover': { background:'linear-gradient(90deg,#1565C0,#00B0FF)' }
+              }}
+            >
+              {emailSending ? 'Sending…' : 'Send'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={3500}
+          onClose={()=>setToast(t=>({ ...t, open:false }))}
+          anchorOrigin={{ vertical:'bottom', horizontal:'center' }}
+        >
+          <Alert
+            onClose={()=>setToast(t=>({ ...t, open:false }))}
+            severity={toast.severity}
+            sx={{ width:'100%' }}
+          >
+            {toast.msg}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   )
