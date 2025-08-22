@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             'email'             => 'admin@example.com',
             'email_verified_at' => now(),
             'password'          => 'password123',
-            'image'             => null,
+            'image'             => 'https://i.pinimg.com/736x/f3/78/4a/f3784adc704a1bc9bcb2e494cd39caee.jpg',
             'role'              => 'administrator',
             'phone'             => null,
             'bio'               => null,
