@@ -1,5 +1,5 @@
 // src/pages/AdminDashboard.jsx
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Container,
@@ -10,7 +10,11 @@ import {
   Stack,
   Chip,
   CircularProgress,
+  IconButton,
+  Button
 } from '@mui/material'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import axios from 'axios'
 import {
   ResponsiveContainer,
@@ -24,7 +28,7 @@ import {
   Area,
 } from 'recharts'
 
-/* ---------- Axios base ---------- */
+/* ---------- Axios base for your Laravel API ---------- */
 const API_BASE =
   (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_API_URL) ||
   (typeof process !== 'undefined' && process?.env?.REACT_APP_API_URL) ||
@@ -117,6 +121,11 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState([]) // from /savings-reports/statistics (admin-only)
   const [error, setError] = useState(null)
 
+  // News state
+  const [news, setNews] = useState([])
+  const [newsLoading, setNewsLoading] = useState(true)
+  const [newsError, setNewsError] = useState(null)
+
   useEffect(() => {
     (async () => {
       try {
@@ -126,6 +135,24 @@ export default function AdminDashboard() {
         setError(e?.response?.data?.error || 'Failed to load statistics')
       } finally {
         setLoading(false)
+      }
+    })()
+  }, [])
+
+  // Fetch free public news (with images). No API key required.
+  useEffect(() => {
+    (async () => {
+      try {
+        setNewsLoading(true)
+        const { data } = await axios.get(
+          'https://api.spaceflightnewsapi.net/v4/articles/',
+          { params: { limit: 12, ordering: '-published_at' } }
+        )
+        setNews(Array.isArray(data?.results) ? data.results : [])
+      } catch {
+        setNewsError('Failed to load news')
+      } finally {
+        setNewsLoading(false)
       }
     })()
   }, [])
@@ -178,6 +205,14 @@ export default function AdminDashboard() {
       .slice(-12)
   }, [normalized])
 
+  /* ------- News slider helpers ------- */
+  const trackRef = useRef(null)
+  const scrollByPage = (dir = 1) => {
+    const el = trackRef.current
+    if (!el) return
+    el.scrollBy({ left: el.clientWidth * 0.9 * dir, behavior: 'smooth' })
+  }
+
   return (
     <Box sx={{
       minHeight: '100vh',
@@ -195,7 +230,7 @@ export default function AdminDashboard() {
           </Typography>
         </Stack>
 
-        {/* KPIs (now white text chips) */}
+        {/* KPIs */}
         <Stack direction="row" spacing={1.5} flexWrap="wrap" mb={2}>
           <StatChip label={`Total: ${fmtCurrency0(kpis.total)}`} />
           <StatChip label={`Reports: ${kpis.reports}`} />
@@ -218,57 +253,176 @@ export default function AdminDashboard() {
             {error}
           </Box>
         ) : (
-          <Grid container spacing={3}>
-            {/* LEFT: Top months by total (Top 8) */}
-            <Grid item xs={12} md={6}>
-              <ChartCard
-                title="Top Months by Total (Top 8)"
-                subtitle="Across all users • Horizontal bar"
-              >
-                <Box sx={{ height: 380, width: 500 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={topMonths}
-                      layout="vertical"
-                      margin={{ top: 8, right: 16, bottom: 8, left: 40 }}
-                    >
-                      <CartesianGrid stroke="rgba(255,255,255,0.08)" />
-                      <XAxis type="number" tick={{ fill:'#BFD9FF' }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
-                      <YAxis type="category" dataKey="month" tick={{ fill:'#BFD9FF' }} width={70} />
-                      <RechartsTooltip content={<TooltipBox money />} />
-                      <Bar dataKey="total" name="Total" fill="#40C4FF" radius={[6,6,6,6]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </ChartCard>
-            </Grid>
+          <>
+            <Grid container spacing={3}>
+              {/* LEFT: Top months by total (Top 8) */}
+              <Grid item xs={12} md={6}>
+                <ChartCard
+                  title="Top Months by Total (Top 8)"
+                  subtitle="Across all users • Horizontal bar"
+                >
+                  {/* keep previous sizing */}
+                  <Box sx={{ height: 380, width: 500 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={topMonths}
+                        layout="vertical"
+                        margin={{ top: 8, right: 16, bottom: 8, left: 40 }}
+                      >
+                        <CartesianGrid stroke="rgba(255,255,255,0.08)" />
+                        <XAxis type="number" tick={{ fill:'#BFD9FF' }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
+                        <YAxis type="category" dataKey="month" tick={{ fill:'#BFD9FF' }} width={70} />
+                        <RechartsTooltip content={<TooltipBox money />} />
+                        <Bar dataKey="total" name="Total" fill="#40C4FF" radius={[6,6,6,6]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </ChartCard>
+              </Grid>
 
-            {/* RIGHT: Last 12 months trend (area) */}
-            <Grid item xs={12} md={6}>
-              <ChartCard
-                title="Last 12 Months Trend"
-                subtitle="Sum of totals per month"
-              >
-                <Box sx={{ height: 380, width: 500 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={last12} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                      <defs>
-                        <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#40C4FF" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#40C4FF" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false}/>
-                      <XAxis dataKey="month" tick={{ fill:'#BFD9FF' }} />
-                      <YAxis tick={{ fill:'#BFD9FF' }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
-                      <RechartsTooltip content={<TooltipBox money />} />
-                      <Area type="monotone" dataKey="total" name="Total" stroke="#40C4FF" fill="url(#gradBlue)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Box>
-              </ChartCard>
+              {/* RIGHT: Last 12 months trend (area) */}
+              <Grid item xs={12} md={6}>
+                <ChartCard
+                  title="Last 12 Months Trend"
+                  subtitle="Sum of totals per month"
+                >
+                  {/* keep previous sizing */}
+                  <Box sx={{ height: 380, width: 500 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={last12} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                        <defs>
+                          <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#40C4FF" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#40C4FF" stopOpacity={0.1}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false}/>
+                        <XAxis dataKey="month" tick={{ fill:'#BFD9FF' }} />
+                        <YAxis tick={{ fill:'#BFD9FF' }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
+                        <RechartsTooltip content={<TooltipBox money />} />
+                        <Area type="monotone" dataKey="total" name="Total" stroke="#40C4FF" fill="url(#gradBlue)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </ChartCard>
+              </Grid>
+
+              {/* NEWS WIDGET — full width slider (same row width as the two cards above) */}
+              <Grid item xs={12}>
+                <ChartCard
+                  title="Latest News"
+                  subtitle="Powered by the free Spaceflight News API"
+                >
+                  {newsLoading ? (
+                    <Box sx={{ textAlign:'center', py: 4 }}>
+                      <CircularProgress color="inherit" />
+                    </Box>
+                  ) : newsError ? (
+                    <Typography sx={{ color:'#FFD1D1' }}>{newsError}</Typography>
+                  ) : (
+                    <Box sx={{ position:'relative' }}>
+                      {/* arrows */}
+                      <IconButton
+                        size="small"
+                        onClick={() => scrollByPage(-1)}
+                        sx={{
+                          position:'absolute', left:-8, top:'50%', transform:'translateY(-50%)',
+                          color:'#EAF1FF', background:'rgba(255,255,255,0.08)',
+                          '&:hover': { background:'rgba(255,255,255,0.15)' }, zIndex: 2
+                        }}
+                      >
+                        <ChevronLeftIcon/>
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => scrollByPage(1)}
+                        sx={{
+                          position:'absolute', right:-8, top:'50%', transform:'translateY(-50%)',
+                          color:'#EAF1FF', background:'rgba(255,255,255,0.08)',
+                          '&:hover': { background:'rgba(255,255,255,0.15)' }, zIndex: 2
+                        }}
+                      >
+                        <ChevronRightIcon/>
+                      </IconButton>
+
+                      {/* slider track */}
+                      <Box
+                        ref={trackRef}
+                        sx={{
+                          overflowX:'auto',
+                          scrollBehavior:'smooth',
+                          display:'flex',
+                          gap:2,
+                          pb:1,
+                          scrollSnapType:'x mandatory',
+                          '&::-webkit-scrollbar': { display:'none' }
+                        }}
+                      >
+                        {news.map(a => (
+                          <Card
+                            key={a.id}
+                            elevation={0}
+                            sx={{
+                              flex: '0 0 280px',
+                              background:'rgba(255,255,255,0.04)',
+                              border:'1px solid rgba(255,255,255,0.08)',
+                              borderRadius: 3,
+                              overflow:'hidden',
+                              scrollSnapAlign:'start',
+                              display:'flex',
+                              flexDirection:'column'
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                position:'relative',
+                                pt: '56.25%',
+                                background: `url(${a.image_url || a.thumbnail || ''}) center/cover no-repeat, linear-gradient(180deg,#0E1326,#0E1326)`,
+                              }}
+                            />
+                            <CardContent sx={{ color:'#FFF', flexGrow:1, display:'flex', flexDirection:'column' }}>
+                              <Typography
+                                variant="subtitle1"
+                                sx={{
+                                  fontWeight:700,
+                                  mb:1,
+                                  display:'-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient:'vertical',
+                                  overflow:'hidden'
+                                }}
+                              >
+                                {a.title}
+                              </Typography>
+                              <Typography variant="body2" sx={{ color:'#AAB4CF', mb:2 }}>
+                                {new Date(a.published_at || a.publishedAt || a.updated_at).toLocaleString()}
+                              </Typography>
+                              <Box sx={{ mt:'auto' }}>
+                                <Button
+                                  href={a.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  variant="contained"
+                                  size="small"
+                                  sx={{
+                                    textTransform:'none',
+                                    background:'linear-gradient(90deg,#2979FF,#40C4FF)',
+                                    '&:hover': { background:'linear-gradient(90deg,#1565C0,#00B0FF)' }
+                                  }}
+                                >
+                                  Read
+                                </Button>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </ChartCard>
+              </Grid>
             </Grid>
-          </Grid>
+          </>
         )}
       </Container>
     </Box>
