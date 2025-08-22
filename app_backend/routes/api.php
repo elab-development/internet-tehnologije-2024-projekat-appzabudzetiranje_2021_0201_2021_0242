@@ -24,6 +24,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('logout', [AuthController::class, 'logout']);
 
+    // ---- Admin-only user management (regular users list + CSV export)
+    Route::get('admin/users/regulars',        [UserController::class, 'adminRegulars']);
+    Route::get('admin/users/regulars/export', [UserController::class, 'exportRegularsCsv']);
+
     // Users (only regular & admin can list; only regular can CRUD)
     Route::apiResource('users', UserController::class);
 

@@ -137,10 +137,9 @@ class SavingsReportController extends Controller
         return response()->json(['message' => 'Report deleted successfully.'], 200);
     }
 
-      /**
-     * Retrieve statistics for the authenticated user's savings reports.
-     * Returns count, total and average expenses per report.
-     * Accessible only by regular users.
+    /**
+     * Global statistics over ALL savings reports (admin only).
+     * Returns one row per report with: year, month, expenses_count, total_expenses, average_expense.
      */
     public function statistics()
     {
@@ -148,29 +147,30 @@ class SavingsReportController extends Controller
         if (! $user) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
-        if ($user->role !== 'regular') {
+        if ($user->role !== 'administrator') {
             return response()->json(['error' => 'You do not have permission.'], 403);
         }
 
-        $reports = SavingsReport::where('user_id', $user->id)
+        // Load all reports, along with expense counts and total amounts
+        $reports = SavingsReport::query()
             ->withCount('expenses')
             ->withSum('expenses', 'amount')
             ->get();
 
         $stats = $reports->map(function ($report) {
-            $count = $report->expenses_count;
-            $sum   = $report->expenses_sum_amount ?? 0;
-            $avg   = $count ? round($sum / $count, 2) : 0;
+            $count = (int) $report->expenses_count;
+            $sum   = (float) ($report->expenses_sum_amount ?? 0);
+            $avg   = $count > 0 ? round($sum / $count, 2) : 0.0;
 
             return [
-                'report_id'        => $report->id,
-                'year'             => $report->year,
-                'month'            => $report->month,
-                'expenses_count'   => $count,
-                'total_expenses'   => $sum,
-                'average_expense'  => $avg,
+                'report_id'       => $report->id,
+                'year'            => (int) $report->year,
+                'month'           => (int) $report->month,
+                'expenses_count'  => $count,
+                'total_expenses'  => $sum,
+                'average_expense' => $avg,
             ];
-        });
+        })->values();
 
         return response()->json(['statistics' => $stats]);
     }
