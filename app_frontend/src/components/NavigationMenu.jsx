@@ -1,5 +1,5 @@
 // src/components/NavigationMenu.jsx
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   AppBar,
   Toolbar,
@@ -57,9 +57,7 @@ const NavLink = styled(Button)(({ theme }) => ({
   '&:hover': {
     color: '#40C4FF',
     backgroundColor: 'transparent',
-    '&::after': {
-      transform: 'scaleX(1)',
-    },
+    '&::after': { transform: 'scaleX(1)' },
   },
 }))
 
@@ -70,19 +68,27 @@ export default function NavigationMenu() {
   const token     = sessionStorage.getItem('token')
   const [anchorEl, setAnchorEl] = useState(null)
 
-  const items = [
-    { label: 'Home',           path: '/home' },
-    { label: 'Track Expenses', path: '/expenses' },
-    { label: 'Savings Reports',path: '/savings-reports' },
-    { label: 'My Savings Groups',path: '/my-savings-groups' },
-  ]
+  // For admins: show ONLY the two admin items. For others: show the regular app nav.
+  const items = useMemo(() => {
+    if (user?.role === 'administrator') {
+      return [
+        { label: 'Admin Dashboard', path: '/admin-dashboard' },
+        { label: 'Users Management', path: '/user-management' },
+      ]
+    }
+    return [
+      { label: 'Home',              path: '/home' },
+      { label: 'Track Expenses',    path: '/expenses' },
+      { label: 'Savings Reports',   path: '/savings-reports' },
+      { label: 'My Savings Groups', path: '/my-savings-groups' },
+    ]
+  }, [user?.role])
 
-  const handleMenuOpen = e => setAnchorEl(e.currentTarget)
+  const handleMenuOpen  = e => setAnchorEl(e.currentTarget)
   const handleMenuClose = () => setAnchorEl(null)
 
   const handleLogout = async () => {
     try {
-      // Call Laravel logout endpoint
       await axios.post(
         '/api/logout',
         {},
@@ -128,7 +134,7 @@ export default function NavigationMenu() {
           >
             <Avatar
               src={user.image}
-              alt={`${user.name} ${user.surname}`}
+              alt={`${user.name || ''} ${user.surname || ''}`}
               sx={{ width: 40, height: 40, cursor: 'pointer' }}
               onClick={handleMenuOpen}
             />
@@ -138,7 +144,7 @@ export default function NavigationMenu() {
             sx={{ color: '#fff', ml: 1, fontWeight: 500, cursor: 'pointer' }}
             onClick={handleMenuOpen}
           >
-            {user.name} {user.surname}
+            {(user.name || '')} {(user.surname || '')}
           </Typography>
           <IconButton onClick={handleMenuOpen} sx={{ color: '#fff', ml: 1 }}>
             <MoreVertIcon />
@@ -157,9 +163,7 @@ export default function NavigationMenu() {
                 backdropFilter: 'blur(10px)',
                 color: '#fff',
                 '& .MuiMenuItem-root': {
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
                 }
               }
             }}

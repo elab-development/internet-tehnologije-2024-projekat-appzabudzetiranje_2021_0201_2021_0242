@@ -75,42 +75,45 @@ const Auth = () => {
     return res.data.data.url
   }
 
-const handleSubmit = async e => {
-  e.preventDefault()
-  setError('')
-  setLoading(true)
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-  try {
-    let imageUrl = null
-    if (isRegister && file) {
-      imageUrl = await uploadImage(file)
-      setUploadedUrl(imageUrl)
-      setPreviewUrl(imageUrl)
+    try {
+      let imageUrl = null
+      if (isRegister && file) {
+        imageUrl = await uploadImage(file)
+        setUploadedUrl(imageUrl)
+        setPreviewUrl(imageUrl)
+      }
+
+      const url     = isRegister ? '/api/register' : '/api/login'
+      const payload = isRegister
+        ? { ...form, role: 'regular', image: imageUrl }
+        : { email: form.email, password: form.password }
+
+      const { data } = await axios.post(url, payload)
+
+      if (!isRegister) {
+        // persist session
+        sessionStorage.setItem('token', data.token)
+        sessionStorage.setItem('user', JSON.stringify(data.user))
+
+        // route by role
+        const dest =
+          (data?.user?.role === 'administrator') ? '/admin-dashboard' : '/home'
+        navigate(dest)
+      } else {
+        // after registering, go back to login screen
+        navigate('/')
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
     }
-
-    const url     = isRegister ? '/api/register' : '/api/login'
-    const payload = isRegister
-      ? { ...form, role: 'regular', image: imageUrl }
-      : { email: form.email, password: form.password }
-
-    const { data } = await axios.post(url, payload)
-
-    if (!isRegister) {
-      // only persist on actual login
-      sessionStorage.setItem('token', data.token)
-      sessionStorage.setItem('user', JSON.stringify(data.user))
-      navigate('/home')
-    } else {
-      // after registering, go back to login screen
-      navigate('/')
-    }
-  } catch (err) {
-    setError(err.response?.data?.message || 'Something went wrong')
-  } finally {
-    setLoading(false)
   }
-}
-
 
   return (
     <Box

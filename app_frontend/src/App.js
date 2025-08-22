@@ -8,6 +8,8 @@ import SavingsReports from './pages/SavingsReports'
 import NavigationMenu from './components/NavigationMenu'
 import Footer from './components/Footer'
 import MySavingsGroups from './pages/MySavingsGroups'
+import AdminDashboard from './pages/AdminDashboard'
+import UserManagement from './pages/UserManagement'
 
 function App() {
   // local state for the token
@@ -59,6 +61,16 @@ function App() {
         <Route
           path="/my-savings-groups"
           element={token ? <MySavingsGroups /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={token ? <AdminDashboard /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/user-management"
+          element={token ? <UserManagement /> : <Navigate to="/" />}
         />
       </Routes>
       {token && <Footer/>}
