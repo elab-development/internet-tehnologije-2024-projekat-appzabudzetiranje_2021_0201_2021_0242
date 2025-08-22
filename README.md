@@ -164,46 +164,46 @@
 
 ## 1) Login (Prijava)
 Ekran za prijavu je minimalistički i fokusiran na polja **Email** i **Password**, sa CTA dugmetom „Login“. Na vrhu je brendiran logo, a u dnu link ka registraciji. Ova sekcija odgovara snimku ekrana `./images/Login`.  
-![Login](./images/Login)
+![Login](./images/Login.png)
 
 ---
 
 ## 2) Register (Registracija)
 Forma za kreiranje naloga sadrži polja za ime, prezime, email, lozinku, potvrdu lozinke, telefon i bio, kao i upload avatara. Vizuelni stil prati tamnu temu sa jasnim kontrastom i velikim CTA „Register“. Pogledajte snimak `./images/Register`.  
-![Register](./images/Register)
+![Register](./images/Register.png)
 
 ---
 
 ## 3) Home (Početna)
 Po ulasku u aplikaciju prikazuje se **hero** sekcija sa porukom dobrodošlice, dugmetom za brzi start i istaknutim benefit karticama (npr. „Better Budget Control“, „Insightful Analytics“). Desno je ilustracija koja balansira layout. Ovaj raspored je prikazan na `./images/Home`.  
-![Home](./images/Home)
+![Home](./images/Home.png)
 
 ---
 
 ## 4) Your Expenses (Troškovi)
 Kartični prikaz troškova u mreži (grid) sa naslovom, opisom, datumom, iznosom i brzim akcijama (edit, delete, refresh). Iznad su filteri (kategorija, sortiranje) i dugme „New Expense“. Vizuelni prikaz odgovara `./images/YourExpenses`.  
-![YourExpenses](./images/YourExpenses)
+![YourExpenses](./images/YourExpenses.png)
 
 ---
 
 ## 5) Savings Reports (Mesečni izveštaji)
 Prikaz mesečnih izveštaja u karticama sa formatom **YYYY/MM**, kratkim opisom i akcijama „View Analytics“ i „View Expenses“. Dizajn zadržava doslednu tipografiju i kartične granice. Referentni snimak: `./images/SavingsReports`.  
-![SavingsReports](./images/SavingsReports)
+![SavingsReports](./images/SavingsReports.png)
 
 ---
 
 ## 6) Savings Groups (Štedne grupe)
 Mreža kartica sa fiksnom širinom (6 po stranici), bedžom privatnosti (Public/Private), dugmetom **Join/Leave** na vrhu, te skrivenim dugmadima **Members/Chat** dok korisnik ne postane član. Tekst opisa se prelama (wrap) unutar kartice. Pogledajte `./images/SavingsGroups`.  
-![SavingsGroups](./images/SavingsGroups)
+![SavingsGroups](./images/SavingsGroups.png)
 
 ---
 
 ## 7) Admin Dashboard (Administratorski pregled)
 Naslov „Welcome Administrator!“ iznad KPI čipova (Total, Reports, Items, Avg per item), dva grafikona (Top Months — horizontal bar; Last 12 Months — area), dugme **Email Report** i **News widget** sa sliderom i slikama. Sve je prikazano na snimku `./images/AdminDashboard`.  
-![AdminDashboard](./images/AdminDashboard)
+![AdminDashboard](./images/AdminDashboard.png)
 
 ---
 
 ## 8) Users Management (Upravljanje korisnicima)
 Tabela svih **regular** korisnika sa avatarom, imenom, emailom, statusom (zelena/siva tačka), datumom registracije, akcijom **Delete**, poljem za pretragu i dugmetom **Export CSV**. UI je kompaktan i čitljiv, kao na `./images/UsersManagement`.  
-![UsersManagement](./images/UsersManagement)
+![UsersManagement](./images/UsersManagement.png)
